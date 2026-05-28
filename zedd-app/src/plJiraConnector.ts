@@ -80,6 +80,40 @@ const updateJiraProjectKeys = () =>
       saveSettings()
     }
   })
+
+const newestTaskByName = (platformTasks: PlatformTask[], taskName: string): PlatformTask | undefined =>
+  platformTasks
+    .filter((t) => t.name === taskName)
+    .sort((a, b) => (!a.start || !b.start ? 0 : compareDesc(a.start, b.start)))[0]
+
+const nextSprintTaskName = (taskName: string): string | undefined => {
+  const match = taskName.match(/^(.*\bsprint\D*)(\d+)(.*)$/i)
+  if (!match) {
+    return undefined
+  }
+  const sprintNumber = Number(match[2])
+  if (Number.isNaN(sprintNumber)) {
+    return undefined
+  }
+  const nextNumber = String(sprintNumber + 1).padStart(match[2].length, '0')
+  return `${match[1]}${nextNumber}${match[3]}`
+}
+
+const resolvePlatformTaskByName = (
+  platformTasks: PlatformTask[],
+  taskName: string,
+): PlatformTask | undefined => {
+  const directTask = newestTaskByName(platformTasks, taskName)
+  if (directTask) {
+    return directTask
+  }
+  const nextSprintName = nextSprintTaskName(taskName)
+  if (!nextSprintName) {
+    return undefined
+  }
+  return newestTaskByName(platformTasks, nextSprintName)
+}
+
 const issueInfoToTask = async (platformTasks: PlatformTask[], i: any): Promise<Task> => {
   if (i.fields.parent) {
     const result = await callWithJsessionCookie(() =>
@@ -97,9 +131,7 @@ const issueInfoToTask = async (platformTasks: PlatformTask[], i: any): Promise<T
   let platformTaskId: number | undefined
   let platformType: PlatformType | undefined = undefined
   if (platformTaskFieldValue) {
-    const platformTask = platformTasks
-      .filter((t) => t.name === platformTaskFieldValue)
-      .sort((a, b) => (!a.start || !b.start ? 0 : compareDesc(a.start, b.start)))[0]
+    const platformTask = resolvePlatformTaskByName(platformTasks, platformTaskFieldValue)
     platformTaskId = platformTask?.intId
     platformType = platformTask?.typ
     if (!platformTaskId || !platformType) {
