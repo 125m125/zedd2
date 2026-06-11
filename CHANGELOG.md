@@ -1,3 +1,6 @@
+## [3.2.2] - 2026-06-11
+- Fix: Improve teams window detection to handle special characters
+
 ## [3.2.1] - 2026-05-28
 - Fix: Improve teams window detection to handle focus switching
 - Fix: Improve sprint migration
