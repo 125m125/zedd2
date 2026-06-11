@@ -106,10 +106,19 @@ export class ZeddSettings {
   @serializable(
     custom(
       (x) => x,
-      (x) => (x === 'https://hazel-peach.now.sh' ? 'https://hazel-peach.vercel.app/' : x),
+      (x) => {
+        if (typeof x !== 'string' || x.length === 0) {
+          return 'https://hazel-peach.vercel.app'
+        }
+        const withoutTrailingSlashes = x.replace(/\/+$/, '')
+        if (withoutTrailingSlashes === 'https://hazel-peach.now.sh') {
+          return 'https://hazel-peach.vercel.app'
+        }
+        return withoutTrailingSlashes
+      },
     ),
   )
-  public updateServer = 'https://hazel-peach.now.sh'
+  public updateServer = 'https://hazel-peach.vercel.app'
 
   @observable
   @serializable
