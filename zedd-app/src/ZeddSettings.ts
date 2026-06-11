@@ -2,6 +2,8 @@ import { promises as fsp } from 'fs'
 import { makeObservable, observable } from 'mobx'
 import { custom, deserialize, raw, serializable, serialize } from 'serializr'
 
+const DEFAULT_UPDATE_SERVER = 'https://hazel-peach.vercel.app'
+
 export class ZeddSettings {
   constructor(fromFile?: string) {
     this.fromFile = fromFile!
@@ -108,17 +110,17 @@ export class ZeddSettings {
       (x) => x,
       (x) => {
         if (typeof x !== 'string' || x.length === 0) {
-          return 'https://hazel-peach.vercel.app'
+          return DEFAULT_UPDATE_SERVER
         }
         const withoutTrailingSlashes = x.replace(/\/+$/, '')
         if (withoutTrailingSlashes === 'https://hazel-peach.now.sh') {
-          return 'https://hazel-peach.vercel.app'
+          return DEFAULT_UPDATE_SERVER
         }
         return withoutTrailingSlashes
       },
     ),
   )
-  public updateServer = 'https://hazel-peach.vercel.app'
+  public updateServer = DEFAULT_UPDATE_SERVER
 
   @observable
   @serializable
