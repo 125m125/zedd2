@@ -265,7 +265,7 @@ function setupAutoUpdater(state: AppState, config: ZeddSettings) {
     },
   )
   autoUpdater.on('update-not-available', (info) => log('No update available:', info.version))
-  autoUpdater.on('error', (error: Error) => log('Error:', error.message))
+  autoUpdater.on('error', (error: Error) => log('Error:', error, error.message, error.stack))
 
   log('Initial check for updates...')
   autoUpdater.checkForUpdates()
