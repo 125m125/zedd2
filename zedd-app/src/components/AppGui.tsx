@@ -130,7 +130,14 @@ export const AppGui = observer(
                   <ReactMarkdown>{changelog}</ReactMarkdown>
                 </DialogContent>
                 <DialogActions>
-                  <Button onClick={() => autoUpdater.checkForUpdates()}>Check for updates</Button>
+                  <Button
+                    onClick={() => {
+                      console.log('[UPDATER] Button clicked: checkForUpdates')
+                      autoUpdater.checkForUpdates()
+                    }}
+                  >
+                    Check for updates
+                  </Button>
                   <Button onClick={() => (state.whatsNewDialogOpen = false)} color='primary'>
                     Got it!
                   </Button>

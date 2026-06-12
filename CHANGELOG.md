@@ -1,3 +1,6 @@
+## [3.2.2] - 2026-06-12
+- Fix: auto and manual Updater should now work (maybe)
+
 ## [3.2.2] - 2026-06-11
 - Fix: Improve teams window detection to handle special characters
 
