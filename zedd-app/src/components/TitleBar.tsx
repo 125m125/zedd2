@@ -128,8 +128,10 @@ export const TitleBar = observer(({ state, menuItems, showContextMenu }: TitleBa
           <MenuItem
             onClick={() => {
               if (state.updateAvailable) {
+                console.log('[UPDATER] Installing update and quitting:', state.updateAvailable)
                 ipcRenderer.send('quit')
               } else {
+                console.log('[UPDATER] Button clicked: checkForUpdates')
                 autoUpdater.checkForUpdates()
               }
               setAnchorEl(null)

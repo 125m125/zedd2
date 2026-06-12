@@ -226,27 +226,50 @@ function quit() {
 }
 
 function setupAutoUpdater(state: AppState, config: ZeddSettings) {
-  if (global.isDev || !isWin)
-    // disable autoupdater for mac,linux and development
-    return () => {
-      /* do nothing */
-    }
+  const log = (...x: any[]) => console.log('[UPDATER]', ...x)
 
+  if (!isWin) {
+    log('Disabled: not on Windows')
+    return () => {}
+  }
+
+  if (global.isDev) {
+    log('Disabled: development mode (use --force-update to enable)')
+    log(`  Feed URL would be: ${config.updateServer}`)
+  }
+
+  if (global.isDev && !process.argv.includes('--force-update')) {
+    return () => {}
+  }
+
+  log(`Setting feed URL: ${config.updateServer}`)
   autoUpdater.setFeedURL({
-    url: `${config.updateServer}/update/${process.platform}/${app.getVersion()}`,
+    url: config.updateServer,
   })
 
   const checkForUpdatesInterval = setInterval(
-    () => autoUpdater.checkForUpdates(),
+    () => {
+      log('Periodic check for updates...')
+      autoUpdater.checkForUpdates()
+    },
     2 * 60 * 60 * 1000, // every 2 hours
   )
 
+  autoUpdater.on('checking-for-update', () => log('Checking for updates...'))
+  autoUpdater.on('update-available', (info) => log('Update available:', info.version))
   autoUpdater.on(
     'update-downloaded',
-    (_event, _releaseNotes, releaseName, _releaseDate, _updateURL) =>
-      (state.updateAvailable = releaseName),
+    (_event, _releaseNotes, releaseName, _releaseDate, _updateURL) => {
+      log('Update downloaded:', releaseName)
+      state.updateAvailable = releaseName
+    },
   )
-  autoUpdater.on('error', (error: Error) => console.log(error.message))
+  autoUpdater.on('update-not-available', (info) => log('No update available:', info.version))
+  autoUpdater.on('error', (error: Error) => log('Error:', error.message))
+
+  log('Initial check for updates...')
+  autoUpdater.checkForUpdates()
+
   return () => {
     clearInterval(checkForUpdatesInterval)
     autoUpdater.removeAllListeners()

@@ -2,6 +2,18 @@ import { promises as fsp } from 'fs'
 import { makeObservable, observable } from 'mobx'
 import { custom, deserialize, raw, serializable, serialize } from 'serializr'
 
+// Squirrel.Windows GitHub release discovery: use "https://github.com/owner/repo"
+// (NOT /releases/latest/download — that's an HTTP redirect Squirrel can't parse)
+const DEFAULT_UPDATE_SERVER = 'https://github.com/125m125/zedd2'
+
+const LEGACY_UPDATE_SERVERS = new Set([
+  'https://hazel-peach.now.sh',
+  'https://hazel-peach.vercel.app',
+  'https://github.com/125m125/zedd2/releases/latest/download',
+])
+
+console.log('[SETTINGS] DEFAULT_UPDATE_SERVER:', DEFAULT_UPDATE_SERVER)
+
 export class ZeddSettings {
   constructor(fromFile?: string) {
     this.fromFile = fromFile!
@@ -106,10 +118,19 @@ export class ZeddSettings {
   @serializable(
     custom(
       (x) => x,
-      (x) => (x === 'https://hazel-peach.now.sh' ? 'https://hazel-peach.vercel.app/' : x),
+      (x) => {
+        if (typeof x !== 'string' || x.length === 0) {
+          return DEFAULT_UPDATE_SERVER
+        }
+        const normalized = x.replace(/\/+$/, '')
+        if (LEGACY_UPDATE_SERVERS.has(normalized)) {
+          return DEFAULT_UPDATE_SERVER
+        }
+        return normalized
+      },
     ),
   )
-  public updateServer = 'https://hazel-peach.now.sh'
+  public updateServer = DEFAULT_UPDATE_SERVER
 
   @observable
   @serializable
