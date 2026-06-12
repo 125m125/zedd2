@@ -2,7 +2,11 @@ import { promises as fsp } from 'fs'
 import { makeObservable, observable } from 'mobx'
 import { custom, deserialize, raw, serializable, serialize } from 'serializr'
 
-const DEFAULT_UPDATE_SERVER = 'https://hazel-peach.vercel.app'
+const DEFAULT_UPDATE_SERVER = 'https://github.com/125m125/zedd2/releases/latest/download'
+const LEGACY_UPDATE_SERVERS = new Set([
+  'https://hazel-peach.now.sh',
+  'https://hazel-peach.vercel.app',
+])
 
 export class ZeddSettings {
   constructor(fromFile?: string) {
@@ -112,11 +116,11 @@ export class ZeddSettings {
         if (typeof x !== 'string' || x.length === 0) {
           return DEFAULT_UPDATE_SERVER
         }
-        const withoutTrailingSlashes = x.replace(/\/+$/, '')
-        if (withoutTrailingSlashes === 'https://hazel-peach.now.sh') {
+        const normalized = x.replace(/\/+$/, '')
+        if (LEGACY_UPDATE_SERVERS.has(normalized)) {
           return DEFAULT_UPDATE_SERVER
         }
-        return withoutTrailingSlashes
+        return normalized
       },
     ),
   )

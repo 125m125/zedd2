@@ -233,7 +233,7 @@ function setupAutoUpdater(state: AppState, config: ZeddSettings) {
     }
 
   autoUpdater.setFeedURL({
-    url: `${config.updateServer}/update/${process.platform}/${app.getVersion()}`,
+    url: config.updateServer,
   })
 
   const checkForUpdatesInterval = setInterval(
