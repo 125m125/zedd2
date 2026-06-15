@@ -533,7 +533,7 @@ async function setup() {
         })
         activeTeamsCallTitle = pendingTeamsCallTitle
         teamsCallDetectStreak = 0
-        lastDetectedTeamsCallTitle = undefined
+        lastDetectedTeamsCallTitle = activeTeamsCallTitle
         d('Teams call detected, switched to task:', teamsTask.taskName)
       } else if (
         teamsCallActive &&
@@ -548,7 +548,7 @@ async function setup() {
         })
         activeTeamsCallTitle = pendingTeamsCallTitle
         teamsCallDetectStreak = 0
-        lastDetectedTeamsCallTitle = undefined
+        lastDetectedTeamsCallTitle = activeTeamsCallTitle
         d('Teams call title changed, switched to task:', teamsTask.taskName)
       } else if (
         teamsCallActive &&

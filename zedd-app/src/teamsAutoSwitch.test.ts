@@ -88,4 +88,12 @@ describe('teamsAutoSwitch', () => {
       undefined,
     )
   })
+
+  it('derives different task names when hopping between meetings', () => {
+    const firstMeeting = deriveTeamsAutoSwitchTask('Architecture Sync | Meeting | Microsoft Teams')
+    const secondMeeting = deriveTeamsAutoSwitchTask('Product Review | Meeting | Microsoft Teams')
+
+    assert.notStrictEqual(firstMeeting.taskName, secondMeeting.taskName)
+    assert.strictEqual(secondMeeting.taskName, 'Product Review')
+  })
 })
