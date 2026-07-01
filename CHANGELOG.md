@@ -1,3 +1,11 @@
+## [3.2.4] - 2026-07-01
+- Fix: Teams auto-switch encoding — window titles from PowerShell are now read as UTF-8, fixing garbled characters (ä/ö/ü) in auto-created task names
+- Fix: Teams auto-switch uses configured Replicon activity name for auto-created tasks
+
+## [3.2.3] - 2026-06-12
+- Fix: Switch Windows auto-updates to GitHub Releases
+- Fix: Default update server migration
+
 ## [3.2.2] - 2026-06-12
 - Fix: auto and manual Updater should now work (maybe)
 

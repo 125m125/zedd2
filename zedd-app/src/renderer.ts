@@ -153,8 +153,8 @@ function detectActiveTeamsCallOrMeetingTitle(): Promise<string | undefined> {
   return new Promise((resolve) => {
     execFile(
       'powershell.exe',
-      ['-NoProfile', '-NonInteractive', '-Command', TEAMS_WINDOW_TITLE_QUERY],
-      { timeout: 3000 },
+      ['-NoProfile', '-NonInteractive', '-Command', `[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;${TEAMS_WINDOW_TITLE_QUERY}`],
+      { timeout: 3000, encoding: 'utf8' },
       (error, stdout) => {
         if (error || !stdout.trim()) {
           resolve(undefined)
@@ -518,7 +518,11 @@ async function setup() {
       ) {
         teamsCallActive = true
         previousTask = state.currentTask
-        const teamsTask = deriveTeamsAutoSwitchTask(pendingTeamsCallTitle, config.teamsTaskName)
+        const teamsTask = deriveTeamsAutoSwitchTask(
+          pendingTeamsCallTitle,
+          config.teamsTaskName,
+          config.repliconActivity,
+        )
         state.currentTask = state.getTaskForNameWithDefaults(teamsTask.taskName, {
           taskActivityName: teamsTask.taskActivityName,
           platformTaskComment: teamsTask.platformTaskComment,

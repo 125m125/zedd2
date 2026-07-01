@@ -83,6 +83,7 @@ export const pickBestTeamsCallOrMeetingTitle = (titles: string[]): string | unde
 export const deriveTeamsAutoSwitchTask = (
   title: string,
   fallbackTaskName = 'teams meeting',
+  overrideActivityName?: string,
 ): TeamsAutoSwitchTask => {
   const sanitizedFallback = normalizeWhitespace(fallbackTaskName) || 'teams meeting'
   const titleTokens = splitTitle(title).filter((token) => !isTeamsToken(token))
@@ -96,7 +97,7 @@ export const deriveTeamsAutoSwitchTask = (
     const activityName = partner ? `call with ${partner}` : sanitizedFallback
     return {
       taskName: activityName,
-      taskActivityName: activityName,
+      taskActivityName: overrideActivityName || activityName,
       platformTaskComment: '',
       kind: partner ? 'call' : 'fallback',
     }
@@ -109,7 +110,7 @@ export const deriveTeamsAutoSwitchTask = (
 
   return {
     taskName: activityName,
-    taskActivityName: activityName,
+    taskActivityName: overrideActivityName || activityName,
     platformTaskComment: meetingName,
     kind: meetingName ? 'meeting' : 'fallback',
   }
