@@ -1,3 +1,6 @@
+## [3.2.5] - unreleased
+- Fix: Stricter Teams call/meeting detection to avoid false positives on channel pages (e.g. Daily, News, Feed, Communities)
+
 ## [3.2.4] - 2026-07-01
 - Fix: Teams auto-switch encoding — window titles from PowerShell are now read as UTF-8, fixing garbled characters (ä/ö/ü) in auto-created task names
 - Fix: Teams auto-switch uses configured Replicon activity name for auto-created tasks

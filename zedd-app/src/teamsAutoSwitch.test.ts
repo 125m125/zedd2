@@ -43,6 +43,15 @@ describe('teamsAutoSwitch', () => {
       isTeamsCallOrMeetingTitle('AI Techtalk I - Grundlagen | Microsoft Teams'),
       true,
     )
+    // Channel pages without explicit call/meeting markers should not be detected
+    assert.strictEqual(isTeamsCallOrMeetingTitle('Daily | Microsoft Teams'), false)
+    assert.strictEqual(isTeamsCallOrMeetingTitle('Communities and Storyline | Microsoft Teams'), false)
+    assert.strictEqual(isTeamsCallOrMeetingTitle('News | Microsoft Teams'), false)
+    assert.strictEqual(isTeamsCallOrMeetingTitle('Feed | Microsoft Teams'), false)
+    // Compound words containing channel keywords should still be allowed
+    assert.strictEqual(isTeamsCallOrMeetingTitle('Entwicklungs-Daily | Microsoft Teams'), true)
+    // Sharing control bar with Teams suffix
+    assert.strictEqual(isTeamsCallOrMeetingTitle('Sharing control bar | Microsoft Teams'), false)
   })
 
   it('prefers explicit meeting windows when several Teams windows are open', () => {

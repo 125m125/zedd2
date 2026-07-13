@@ -7,7 +7,12 @@ export type TeamsAutoSwitchTask = {
 
 const CALL_MARKER_RE = /\b(call|anruf)\b/i
 const MEETING_MARKER_RE = /\b(meeting|besprechung)\b/i
-const NON_MEETING_TITLE_RE = /\b(chat|activity|aktivität|calendar|kalender)\b/i
+const NON_MEETING_TITLE_RE = /^(chat|activity|aktivität|calendar|kalender)$/i
+const CHANNEL_KEYWORDS = new Set(['chat', 'activity', 'aktivität', 'calendar', 'kalender', 'daily', 'community', 'communities', 'storyline', 'channel', 'feed', 'news', 'files', 'dateien', 'wiki', 'dashboard', 'overview', 'übersicht', 'home', 'start', 'settings', 'einstellungen', 'search', 'suche'])
+const CHANNEL_FILLER_RE = /^(and|or|und|oder|the|a|an|das|der|die|den|dem|des|von|mit|zu|für|in|auf|bei|aus)$/i
+
+const isAllChannelKeywords = (token: string): boolean =>
+  splitWithSpaces(token).every((w) => CHANNEL_KEYWORDS.has(w.toLowerCase()) || CHANNEL_FILLER_RE.test(w))
 const TEAMS_TOKEN_RE = /^(microsoft\s+)?teams(?:\s+classic)?$/i
 
 const normalizeWhitespace = (value: string) => value.replace(/\s+/g, ' ').trim()
@@ -31,6 +36,8 @@ const splitTitle = (title: string): string[] =>
     .split(/\s*(?:\||:|·|•| - | – | — )\s*/g)
     .map(normalizeWhitespace)
     .filter(Boolean)
+
+const splitWithSpaces = (s: string): string[] => s.split(/\s+/g).filter(Boolean)
 
 const isTeamsToken = (token: string) => TEAMS_TOKEN_RE.test(token)
 const isCallToken = (token: string) => /^(call|anruf)$/i.test(token)
@@ -57,11 +64,14 @@ export const isTeamsCallOrMeetingTitle = (title: string): boolean => {
   const normalizedTitle = stripTeamsSuffix(title)
   const titleTokens = splitTitle(normalizedTitle)
   const hasTeamsSuffix = normalizeWhitespace(title) !== normalizedTitle
-  const looksLikeMarkerlessMeeting =
+  const EXCLUDED_TITLES = new Set(['sharing control bar'])
+const looksLikeMarkerlessMeeting =
     hasTeamsSuffix &&
     titleTokens.length > 0 &&
+    titleTokens.some((token) => !isAllChannelKeywords(token)) &&
     !titleTokens.some((token) => NON_MEETING_TITLE_RE.test(token)) &&
-    !titleTokens.every((token) => isTeamsToken(token))
+    !titleTokens.every((token) => isTeamsToken(token)) &&
+    !EXCLUDED_TITLES.has(normalizedTitle.toLowerCase())
 
   return (
     CALL_MARKER_RE.test(normalizedTitle) ||
