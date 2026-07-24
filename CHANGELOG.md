@@ -1,4 +1,7 @@
-## [3.2.5] - unreleased
+## [3.2.6] - unreleased
+- Fix: OTT booking-points API now rounds task hours with the same sort order as the GUI, so per-task hour breakdowns match
+
+## [3.2.5] - 2026-07-13
 - Fix: Stricter Teams call/meeting detection to avoid false positives on channel pages (e.g. Daily, News, Feed, Communities)
 
 ## [3.2.4] - 2026-07-01

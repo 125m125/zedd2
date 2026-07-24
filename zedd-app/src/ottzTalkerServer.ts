@@ -165,8 +165,8 @@ function computeOttBookingPoints(
     const smartRounded = smartRound(
       sortBy(
         dayHourss,
-        (x) => String(x.taskId),
-        (x) => x.comment ?? '',
+        (x) => platformState.resolveTask(x.taskId)?.projectName ?? '',
+        (x) => platformState.resolveTask(x.taskId)?.name ?? '',
       ),
       (x) => x.hours,
       0.25,
