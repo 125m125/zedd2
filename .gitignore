@@ -90,3 +90,6 @@ out/
 
 .vs
 .idea
+
+# Generated release data
+zedd-app/releases.json

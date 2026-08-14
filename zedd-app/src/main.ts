@@ -1,5 +1,6 @@
 import * as remoteMain from '@electron/remote/main'
 import { app, BrowserWindow, ipcMain, session } from 'electron'
+import { autoUpdater } from 'electron-updater'
 
 remoteMain.initialize()
 
@@ -116,3 +117,107 @@ app.on('activate', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
+
+const DEFAULT_UPDATE_SERVER = 'https://github.com/125m125/zedd2'
+let updaterInitialized = false
+let cleanupUpdater: (() => void) | undefined
+
+function isUpdateEnabled(): boolean {
+  if (process.platform !== 'win32') return false
+  if (global.isDev && !process.argv.includes('--force-update')) return false
+  return true
+}
+
+function setupAutoUpdater(_feedUrl: string) {
+  const log = (...x: any[]) => console.log('[UPDATER]', ...x)
+
+  if (!isUpdateEnabled()) {
+    log('Disabled: not on Windows or dev mode')
+    return () => {}
+  }
+
+  log(`Configuring GitHub updater`)
+  autoUpdater.setFeedURL({
+    provider: 'github',
+    owner: '125m125',
+    repo: 'zedd2',
+  })
+
+  // Allow update checks in dev mode (unpacked app)
+  autoUpdater.forceDevUpdateConfig = global.isDev && process.argv.includes('--force-update')
+
+  // Disable auto-download — we want to confirm with the user first
+  autoUpdater.autoDownload = false
+
+  let checkInterval: ReturnType<typeof setInterval>
+
+  autoUpdater.on('checking-for-update', () => log('Checking for updates...'))
+  autoUpdater.on('update-available', (info) => {
+    log('Update available:', info.version)
+    // Send release notes so renderer can show them to the user
+    mainWindow?.webContents.send('updater-update-available', {
+      version: info.version,
+      releaseNotes: info.releaseNotes || '',
+    })
+  })
+  autoUpdater.on('update-not-available', (info) => log('No update available:', info.version))
+  autoUpdater.on('download-progress', (progress) => {
+    log(`Downloading: ${progress.percent.toFixed(0)}%`)
+  })
+  autoUpdater.on('update-downloaded', (event) => {
+    log('Update downloaded:', event.version)
+    mainWindow?.webContents.send('updater-downloaded', { releaseName: event.version, releaseNotes: event.releaseNotes })
+  })
+  autoUpdater.on('error', (error: Error) => log('Error:', error, error.message))
+
+  log('Initial check for updates...')
+  autoUpdater.checkForUpdates()
+
+  checkInterval = setInterval(() => {
+    log('Periodic check for updates...')
+    autoUpdater.checkForUpdates()
+  }, 2 * 60 * 60 * 1000) // every 2 hours
+
+  // IPC: manual check on demand
+  ipcMain.on('updater-check', () => {
+    log('Manual check requested')
+    autoUpdater.checkForUpdates()
+  })
+
+  // IPC: user confirmed, start download
+  ipcMain.on('updater-confirm', () => {
+    log('User confirmed update, starting download...')
+    autoUpdater.downloadUpdate()
+  })
+
+  // IPC: user wants to quit and install
+  ipcMain.on('updater-quit-and-install', () => {
+    log('Quitting and installing update...')
+    autoUpdater.quitAndInstall()
+  })
+
+  return () => {
+    clearInterval(checkInterval)
+    autoUpdater.removeAllListeners()
+  }
+}
+
+// Listen for feed URL from renderer (it reads settings)
+ipcMain.on('updater-init', (_event, feedUrl: string) => {
+  if (updaterInitialized) return
+  updaterInitialized = true
+  cleanupUpdater = setupAutoUpdater(feedUrl)
+})
+
+// Also start with default if renderer doesn't send one quickly
+setTimeout(() => {
+  if (isUpdateEnabled() && !updaterInitialized) {
+    updaterInitialized = true
+    cleanupUpdater = setupAutoUpdater(DEFAULT_UPDATE_SERVER)
+  }
+}, 30_000)
+
+// Clean up updater interval on quit
+app.on('will-quit', () => {
+  cleanupUpdater?.()
+})

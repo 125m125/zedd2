@@ -15,7 +15,7 @@ import {
 } from '@mui/material/styles'
 import { ThemeProvider } from '@emotion/react'
 import useMediaQuery from '@mui/material/useMediaQuery'
-import { autoUpdater } from '@electron/remote'
+import { ipcRenderer } from 'electron'
 import { observer } from 'mobx-react-lite'
 import * as React from 'react'
 import { useEffect, useMemo } from 'react'
@@ -133,7 +133,7 @@ export const AppGui = observer(
                   <Button
                     onClick={() => {
                       console.log('[UPDATER] Button clicked: checkForUpdates')
-                      autoUpdater.checkForUpdates()
+                      ipcRenderer.send('updater-check')
                     }}
                   >
                     Check for updates
