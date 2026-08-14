@@ -203,6 +203,23 @@ export const stringHashColor = (str: string): chroma.Color => {
   return chroma.num(stringHash(str) & 0xffffff)
 }
 
+/**
+ * Hashes a string to a deterministic HSL color.
+ * Uses an avalanche step after the basic hash so small input changes
+ * produce large hue differences (e.g. REGITEST-498 vs 499).
+ * Saturation and lightness are fixed for consistent, distinguishable bars.
+ */
+export const stringHashHslColor = (str: string): chroma.Color => {
+  let h = 0
+  for (let i = 0; i < str.length; i++) h = (imul(31, h) + str.charCodeAt(i)) | 0
+  // MurmurHash3-style avalanche: mix bits so small input deltas spread
+  h ^= h >>> 16
+  h = imul(h, 0x45d9f3b)
+  h ^= h >>> 13
+  const hue = Math.abs(h) % 360
+  return chroma.hsl(hue, 0.75, 0.65)
+}
+
 export const isoDayStr = (day: number | Date): string => formatDate(day, 'yyyy-MM-dd')
 
 export function useDebouncedCallback<T extends (...args: any[]) => any>(

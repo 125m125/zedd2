@@ -187,6 +187,15 @@ export class ZeddSettings {
   public targetNotificationAdvanceMinutes: number[] = [60, 15, 0]
 
   /**
+   * Calendar bar color generation mode.
+   * 'hash' – legacy RGB hash (same colors as before).
+   * 'hsl'  – improved HSL hash with bit-avalanche for better color distribution.
+   */
+  @observable
+  @serializable
+  public colorMode: 'hash' | 'hsl' = 'hsl'
+
+  /**
    * Whether to flash the taskbar / window icon when a target notification fires.
    * The flash is cleared automatically when the window gains focus.
    */

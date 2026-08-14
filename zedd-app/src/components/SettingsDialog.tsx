@@ -308,6 +308,21 @@ export const SettingsDialog = observer(
             </Grid>
 
             <Grid item xs={4}>
+              <FormLabel>Bar Color Mode</FormLabel>
+              <div style={{ fontSize: 'small' }}>
+                Improved mode distributes colors more evenly across the hue spectrum.
+              </div>
+            </Grid>
+            <Grid item xs={8} component={'label'}>
+              Legacy
+              <Switch
+                checked={'hsl' === settings.colorMode}
+                onChange={(_, checked) => (settings.colorMode = checked ? 'hsl' : 'hash')}
+              />
+              Improved
+            </Grid>
+
+            <Grid item xs={4}>
               <FormLabel>OTT URL</FormLabel>
             </Grid>
             <Grid item xs={8}>

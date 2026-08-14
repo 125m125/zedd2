@@ -449,6 +449,7 @@ export const AppBody = observer(
                     onAltRightClick={onAltRightClick}
                     onMarkingBlock={onMarkingBlock}
                     slicesMarked={state.slicesMarked}
+                    colorMode={settings.colorMode}
                   />
                 )
               }}

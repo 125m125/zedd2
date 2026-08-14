@@ -64,11 +64,12 @@ export const TitleBar = observer(({ state, menuItems, showContextMenu }: TitleBa
         height: vertical ? '100%' : 37,
         width: vertical ? 43 : '100%',
         alignItems: 'center',
-        backgroundColor: state.currentTask
-          .getColor()
-          .set('hsl.s', 0.9)
-          .set('hsl.l', 'dark' === theme.palette.mode ? 0.2 : 0.8)
-          .css(),
+        backgroundColor: (() => {
+          const mode = state.config.colorMode
+          const base = state.currentTask.getColor(mode)
+          const color = base.set('hsl.s', 0.9)
+          return color.set('hsl.l', 'dark' === theme.palette.mode ? 0.2 : 0.75).css()
+        })(),
       }}
       position='static'
       onContextMenu={showContextMenu}

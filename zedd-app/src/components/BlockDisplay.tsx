@@ -18,6 +18,7 @@ export type BlockProps = {
   onMarkingBlock: (block: TimeSlice) => void
   platformState: PlatformState
   slicesMarked: boolean
+  colorMode: 'hash' | 'hsl'
 } & Omit<React.HTMLAttributes<HTMLDivElement>, 'onContextMenu'>
 
 export const BlockDisplay = observer(
@@ -30,6 +31,7 @@ export const BlockDisplay = observer(
     onAltRightClick,
     onMarkingBlock,
     platformState,
+    colorMode,
     style,
     className,
     ...attributes
@@ -91,6 +93,15 @@ export const BlockDisplay = observer(
     const task = platformState.resolveTask(slice.task.platformTaskIntId)
 
     const theme = useTheme()
+    const isDark = 'dark' === theme.palette.mode
+    const mode = colorMode
+
+    const getBarColor = (marked: boolean): string => {
+      const base = slice.task.getColor(mode)
+      const color = base.set('hsl.s', 0.9)
+      const adjusted = color.set('hsl.l', isDark ? 0.2 : 0.75)
+      return marked ? adjusted.darker().css() : adjusted.css()
+    }
 
     return (
       <div
@@ -106,17 +117,8 @@ export const BlockDisplay = observer(
           backgroundColor:
             'task' in slice
               ? checkIfMarked()
-                ? slice.task
-                    .getColor()
-                    .set('hsl.s', 0.9)
-                    .set('hsl.l', 'dark' === theme.palette.mode ? 0.2 : 0.8)
-                    .darker()
-                    .css()
-                : slice.task
-                    .getColor()
-                    .set('hsl.s', 0.9)
-                    .set('hsl.l', 'dark' === theme.palette.mode ? 0.2 : 0.8)
-                    .css()
+                ? getBarColor(true)
+                : getBarColor(false)
               : '#eeeeee',
           right: 0,
           left: 20,
@@ -135,7 +137,7 @@ export const BlockDisplay = observer(
               bottom: 0,
               paddingRight: 2,
               fontSize: '80%',
-              color: slice.task.getColor().set('hsl.s', 1).set('hsl.l', 0.38).css(),
+              color: slice.task.getColor(mode).set('hsl.s', 1).set('hsl.l', 0.38).css(),
             }}
           >
             {format(slice.start, 'HH:mm')} - {format(slice.end, 'HH:mm')}

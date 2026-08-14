@@ -60,6 +60,7 @@ import {
   readFilesWithDate,
   startOfNextMinute,
   stringHashColor,
+  stringHashHslColor,
   tryWithFilesInDir,
   uniqCustom,
 } from './util'
@@ -147,8 +148,11 @@ export class Task {
     return (a.key && b.key && a.key === b.key) || a.name === b.name
   }
 
-  public getColor(): chroma.Color {
-    return stringHashColor(this.name)
+  public getColor(mode: 'hash' | 'hsl' = 'hsl'): chroma.Color {
+    if (mode === 'hash') {
+      return stringHashColor(this.name)
+    }
+    return stringHashHslColor(this.name)
   }
 }
 
