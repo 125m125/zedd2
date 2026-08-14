@@ -1,5 +1,6 @@
 ## [3.2.6] - unreleased
 - Fix: OTT booking-points API now rounds task hours with the same sort order as the GUI, so per-task hour breakdowns match
+- Feature: Auto-fill platform task comment with the task name when first assigning a platform task (via dropdown or GUESS button), skipping ANA/UMS tasks
 
 ## [3.2.5] - 2026-07-13
 - Fix: Stricter Teams call/meeting detection to avoid false positives on channel pages (e.g. Daily, News, Feed, Communities)

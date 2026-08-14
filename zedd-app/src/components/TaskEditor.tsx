@@ -187,10 +187,14 @@ export const TaskEditor = observer(
             fullWidth
             style={{ flex: '1 1 auto' }}
             onChange={(newIntId) => {
+              const isFirstAssignment = !value.platformTaskIntId
               if (newIntId !== undefined && newIntId !== null) {
                 value.platformTaskIntId = newIntId
                 const task = platformState.resolveTask(value?.platformTaskIntId)
                 value.platformType = task?.typ
+                if (isFirstAssignment && !value.name.includes('ANA') && !value.name.includes('UMS')) {
+                  value.platformTaskComment = value.name
+                }
               } else {
                 value.platformTaskIntId = ''
               }
@@ -203,7 +207,11 @@ export const TaskEditor = observer(
           <Button
             disabled={undefined === guessPlatformIntId}
             onClick={(_) => {
+              const isFirstAssignment = !value.platformTaskIntId
               value.platformTaskIntId = guessPlatformIntId
+              if (isFirstAssignment && !value.name.includes('ANA') && !value.name.includes('UMS')) {
+                value.platformTaskComment = value.name
+              }
             }}
             style={{ width: '100%' }}
             endIcon={<SentimentSatisfiedAlt />}
