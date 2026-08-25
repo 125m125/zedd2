@@ -486,6 +486,8 @@ async function setup() {
   let previousTask: typeof state.currentTask | null = null
   let teamsCallDetectStreak = 0
   let teamsCallClearStreak = 0
+  let activeTeamsCallTitle: string | undefined
+  let lastDetectedTeamsCallTitle: string | undefined
   let pendingTeamsCallTitle: string | undefined
   const teamsCallInterval = setInterval(async () => {
     if (!config.teamsAutoSwitch) return
@@ -494,10 +496,16 @@ async function setup() {
       if (callTitle) {
         teamsCallClearStreak = 0
         pendingTeamsCallTitle = callTitle
-        teamsCallDetectStreak += 1
+        if (callTitle === lastDetectedTeamsCallTitle) {
+          teamsCallDetectStreak += 1
+        } else {
+          teamsCallDetectStreak = 1
+          lastDetectedTeamsCallTitle = callTitle
+        }
       } else {
         teamsCallDetectStreak = 0
         pendingTeamsCallTitle = undefined
+        lastDetectedTeamsCallTitle = undefined
         teamsCallClearStreak += 1
       }
 
@@ -517,8 +525,25 @@ async function setup() {
           taskActivityName: teamsTask.taskActivityName,
           platformTaskComment: teamsTask.platformTaskComment,
         })
+        activeTeamsCallTitle = pendingTeamsCallTitle
         teamsCallDetectStreak = 0
+        lastDetectedTeamsCallTitle = activeTeamsCallTitle
         d('Teams call detected, switched to task:', teamsTask.taskName)
+      } else if (
+        teamsCallActive &&
+        pendingTeamsCallTitle &&
+        activeTeamsCallTitle !== pendingTeamsCallTitle &&
+        teamsCallDetectStreak >= TEAMS_CALL_DETECT_CONFIRMATIONS
+      ) {
+        const teamsTask = deriveTeamsAutoSwitchTask(pendingTeamsCallTitle, config.teamsTaskName)
+        state.currentTask = state.getTaskForNameWithDefaults(teamsTask.taskName, {
+          taskActivityName: teamsTask.taskActivityName,
+          platformTaskComment: teamsTask.platformTaskComment,
+        })
+        activeTeamsCallTitle = pendingTeamsCallTitle
+        teamsCallDetectStreak = 0
+        lastDetectedTeamsCallTitle = activeTeamsCallTitle
+        d('Teams call title changed, switched to task:', teamsTask.taskName)
       } else if (
         teamsCallActive &&
         teamsCallClearStreak >= TEAMS_CALL_CLEAR_CONFIRMATIONS
@@ -529,6 +554,8 @@ async function setup() {
           d('Teams call ended, restored previous task:', previousTask.name)
         }
         previousTask = null
+        activeTeamsCallTitle = undefined
+        lastDetectedTeamsCallTitle = undefined
         teamsCallClearStreak = 0
       }
     } catch (e) {
