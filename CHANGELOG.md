@@ -1,7 +1,8 @@
-## [3.2.6] - unreleased
+## [3.3.0] - 2026-08.25
 - Feature: Improved bar color generation with better hue distribution — switchable in settings (Bar Color Mode: Legacy / Improved). Toggle back to Legacy mode if you prefer the original colors.
-- Fix: OTT booking-points API now rounds task hours with the same sort order as the GUI, so per-task hour breakdowns match
 - Feature: Auto-fill platform task comment with the task name when first assigning a platform task (via dropdown or GUESS button), skipping ANA/UMS tasks
+- Feature: Maybe finally fix auto-updater
+- Fix: OTT booking-points API now rounds task hours with the same sort order as the GUI, so per-task hour breakdowns match
 
 ## [3.2.5] - 2026-07-13
 - Fix: Stricter Teams call/meeting detection to avoid false positives on channel pages (e.g. Daily, News, Feed, Communities)
