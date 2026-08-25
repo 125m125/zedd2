@@ -1,6 +1,5 @@
 import {
   app,
-  autoUpdater,
   screen as electronScreen,
   getCurrentWindow,
   Menu,
@@ -22,7 +21,6 @@ import { AppState, format, formatInterval, TimeSlice } from './AppState'
 import { PlatformState } from './PlatformState'
 import { AppGui } from './components/AppGui'
 import './index.css'
-import { createRoot } from 'react-dom/client'
 import {
   checkCgJira,
   getLinksFromString,
@@ -43,18 +41,8 @@ import {
   getNonEnvPathChromePath,
   installChromeDriver,
 } from './chromeDriverMgmt'
-import { AppGui } from './components/AppGui'
-import './index.css'
 import { suggestedTaskMenuItems } from './menuUtil'
 import { startOttzTalkerServer } from './ottzTalkerServer'
-import {
-  checkCgJira,
-  getLinksFromString,
-  getTasksForSearchString,
-  getTasksFromAssignedJiraIssues,
-  initJiraClient,
-} from './plJiraConnector'
-import { fileExists, floor, formatHoursBT, formatHoursHHmm, mkdirIfNotExists } from './util'
 
 configureMobx({ enforceActions: 'never' })
 
@@ -225,54 +213,56 @@ function quit() {
   ipcRenderer.send('quit')
 }
 
+let lastNotifiedUpdateVersion: string | null = null
+
 function setupAutoUpdater(state: AppState, config: ZeddSettings) {
-  const log = (...x: any[]) => console.log('[UPDATER]', ...x)
+  // Tell the main process to initialize the updater with our settings
+  ipcRenderer.send('updater-init', config.updateServer)
 
-  if (!isWin) {
-    log('Disabled: not on Windows')
-    return () => {}
+  // Update is available — show notification with changelog preview, but deduplicate across checks
+  const onAvailable = (_event, info: { version: string; releaseNotes: string }) => {
+    const version = info.version
+    if (lastNotifiedUpdateVersion === version) return // already notified this session
+
+    lastNotifiedUpdateVersion = version
+    console.log('[UPDATER] Update available:', version)
+    state.updateAvailable = version
+
+    // Truncate release notes to ~200 chars for the notification body
+    const notes = info.releaseNotes && info.releaseNotes.length > 200
+      ? info.releaseNotes.substring(0, 200) + '…'
+      : info.releaseNotes || '(no release notes)'
+
+    showNotification(
+      `zedd update ${version} available`,
+      notes + '\nClick to install (requires restart), or ignore this notification.',
+      () => {
+        // User confirmed — tell main process to download
+        ipcRenderer.send('updater-confirm')
+      },
+    )
   }
 
-  if (global.isDev) {
-    log('Disabled: development mode (use --force-update to enable)')
-    log(`  Feed URL would be: ${config.updateServer}`)
+  // Update downloaded successfully — prompt to restart and install
+  const onDownloaded = (_event, info: { releaseName: string; releaseNotes: string }) => {
+    console.log('[UPDATER] Update downloaded:', info.releaseName)
+    lastNotifiedUpdateVersion = null // clear dedup, this version is being installed
+
+    showNotification(
+      `zedd ${info.releaseName} downloaded`,
+      'Click to restart and install now, or ignore to install later.',
+      () => {
+        ipcRenderer.send('updater-quit-and-install')
+      },
+    )
   }
 
-  if (global.isDev && !process.argv.includes('--force-update')) {
-    return () => {}
-  }
-
-  log(`Setting feed URL: ${config.updateServer}`)
-  autoUpdater.setFeedURL({
-    url: config.updateServer,
-  })
-
-  const checkForUpdatesInterval = setInterval(
-    () => {
-      log('Periodic check for updates...')
-      autoUpdater.checkForUpdates()
-    },
-    2 * 60 * 60 * 1000, // every 2 hours
-  )
-
-  autoUpdater.on('checking-for-update', () => log('Checking for updates...'))
-  autoUpdater.on('update-available', (info) => log('Update available:', info.version))
-  autoUpdater.on(
-    'update-downloaded',
-    (_event, _releaseNotes, releaseName, _releaseDate, _updateURL) => {
-      log('Update downloaded:', releaseName)
-      state.updateAvailable = releaseName
-    },
-  )
-  autoUpdater.on('update-not-available', (info) => log('No update available:', info.version))
-  autoUpdater.on('error', (error: Error) => log('Error:', error, error.message, error.stack))
-
-  log('Initial check for updates...')
-  autoUpdater.checkForUpdates()
+  ipcRenderer.on('updater-update-available', onAvailable)
+  ipcRenderer.on('updater-downloaded', onDownloaded)
 
   return () => {
-    clearInterval(checkForUpdatesInterval)
-    autoUpdater.removeAllListeners()
+    ipcRenderer.removeListener('updater-update-available', onAvailable)
+    ipcRenderer.removeListener('updater-downloaded', onDownloaded)
   }
 }
 
