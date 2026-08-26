@@ -192,7 +192,7 @@ export const TaskEditor = observer(
                 value.platformTaskIntId = newIntId
                 const task = platformState.resolveTask(value?.platformTaskIntId)
                 value.platformType = task?.typ
-                if (isFirstAssignment && !value.name.includes('ANA') && !value.name.includes('UMS')) {
+                if (isFirstAssignment && !task?.name.includes('ANA') && !task?.name.includes('UMS')) {
                   value.platformTaskComment = value.name
                 }
               } else {
@@ -209,7 +209,8 @@ export const TaskEditor = observer(
             onClick={(_) => {
               const isFirstAssignment = !value.platformTaskIntId
               value.platformTaskIntId = guessPlatformIntId
-              if (isFirstAssignment && !value.name.includes('ANA') && !value.name.includes('UMS')) {
+              const task = platformState.resolveTask(guessPlatformIntId)
+              if (isFirstAssignment && !task?.name.includes('ANA') && !task?.name.includes('UMS')) {
                 value.platformTaskComment = value.name
               }
             }}

@@ -1,3 +1,6 @@
+## [3.3.1] - 2026-08-26
+- Fix: Auto-fill of the platform task comment now skips tasks based on the assigned **account** name (containing ANA/UMS) instead of the local task name
+
 ## [3.3.0] - 2026-08.25
 - Feature: Improved bar color generation with better hue distribution — switchable in settings (Bar Color Mode: Legacy / Improved). Toggle back to Legacy mode if you prefer the original colors.
 - Feature: Auto-fill platform task comment with the task name when first assigning a platform task (via dropdown or GUESS button), skipping ANA/UMS tasks
