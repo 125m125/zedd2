@@ -46,6 +46,11 @@ describe('teamsAutoSwitch', () => {
     // Channel pages without explicit call/meeting markers should not be detected
     assert.strictEqual(isTeamsCallOrMeetingTitle('Daily | Microsoft Teams'), false)
     assert.strictEqual(isTeamsCallOrMeetingTitle('Communities and Storyline | Microsoft Teams'), false)
+    // Channel page that appends the user's name as an extra segment
+    assert.strictEqual(
+      isTeamsCallOrMeetingTitle('Communities and Storyline | Doe, John | Microsoft Teams'),
+      false,
+    )
     assert.strictEqual(isTeamsCallOrMeetingTitle('News | Microsoft Teams'), false)
     assert.strictEqual(isTeamsCallOrMeetingTitle('Feed | Microsoft Teams'), false)
     // Compound words containing channel keywords should still be allowed

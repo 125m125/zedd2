@@ -64,14 +64,20 @@ export const isTeamsCallOrMeetingTitle = (title: string): boolean => {
   const normalizedTitle = stripTeamsSuffix(title)
   const titleTokens = splitTitle(normalizedTitle)
   const hasTeamsSuffix = normalizeWhitespace(title) !== normalizedTitle
-  const EXCLUDED_TITLES = new Set(['sharing control bar'])
+  // Channel pages (e.g. "Sharing control bar") can appear with an extra
+  // segment such as the user's name ("... | Surname, Firstname"), so match on
+  // the leading pipe-separated segment rather than the full title.
+  const EXCLUDED_TITLES = new Set(['sharing control bar', 'communities and storyline'])
+  const leadingSegment = normalizeWhitespace(
+    normalizedTitle.split(/\s*(?:\||:|·|•)\s*/)[0],
+  ).toLowerCase()
 const looksLikeMarkerlessMeeting =
     hasTeamsSuffix &&
     titleTokens.length > 0 &&
     titleTokens.some((token) => !isAllChannelKeywords(token)) &&
     !titleTokens.some((token) => NON_MEETING_TITLE_RE.test(token)) &&
     !titleTokens.every((token) => isTeamsToken(token)) &&
-    !EXCLUDED_TITLES.has(normalizedTitle.toLowerCase())
+    !EXCLUDED_TITLES.has(leadingSegment)
 
   return (
     CALL_MARKER_RE.test(normalizedTitle) ||
