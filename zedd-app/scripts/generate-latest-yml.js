@@ -118,12 +118,13 @@ async function main() {
   const files = fs.readdirSync(SQUIRREL_DIR).filter((f) => f.endsWith('Setup.exe'))
   if (files.length === 0) {
     console.error('No Setup.exe found in squirrel output directory')
-    console.error('Expected pattern: zedd-app-X.Y.Z.Setup.exe')
+    console.error('Expected pattern: zedd-app-X.Y.Z Setup.exe')
     process.exit(1)
   }
 
-  // Sort by version and get the latest
-  const versionPattern = /zedd-app-([0-9]+\.[0-9]+\.[0-9]+)\.Setup\.exe/
+  // Sort by version and get the latest. maker-squirrel names the installer
+  // `zedd-app-X.Y.Z Setup.exe` (note the space); older releases used `...Z.Setup.exe`.
+  const versionPattern = /zedd-app-([0-9]+\.[0-9]+\.[0-9]+)[ .]?Setup\.exe/
   const versions = files
     .map((f) => {
       const m = f.match(versionPattern)
