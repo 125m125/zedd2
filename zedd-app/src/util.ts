@@ -31,6 +31,54 @@ export const FILE_DATE_FORMAT = "yyyyMMdd'T'HHmm"
 
 export const fileExists = promisify(fs.exists)
 
+/**
+ * Convert GitHub release-notes HTML into plain markdown so it can be rendered by
+ * ReactMarkdown. GitHub serves release bodies as HTML (e.g. <ul><li>…</li></ul>);
+ * electron-updater hands it to us verbatim. Uses the built-in DOMParser (the
+ * renderer has full DOM access) so no extra dependency is needed.
+ */
+export function htmlToMarkdown(html: string): string {
+  if (!html) return ''
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  const out: string[] = []
+  const walk = (node: Element): void => {
+    for (const child of Array.from(node.children)) {
+      const tag = child.tagName.toLowerCase()
+      const text = (child.textContent ?? '').trim()
+      if (tag === 'li') {
+        out.push('- ' + text)
+      } else if (/^h[1-6]$/.test(tag)) {
+        out.push('#'.repeat(Number(tag[1])) + ' ' + text)
+      } else if (tag === 'p' || tag === 'strong' || tag === 'em') {
+        out.push(text)
+      } else if (tag === 'br') {
+        out.push('')
+      } else {
+        walk(child)
+      }
+    }
+  }
+  if (doc.body) walk(doc.body)
+  return out.join('\n')
+}
+
+/**
+ * electron-updater's `releaseNotes` is either a single HTML string (single
+ * version) or — with `fullChangelog` enabled — an array of
+ * `{ version, note }` objects for every version since the current one, newest
+ * first. Normalize both into a single markdown string with a heading per version
+ * so the "what's new since X" dialog is complete even when versions were skipped.
+ */
+export function releaseNotesToMarkdown(
+  notes: string | { version: string; note: string }[] | undefined,
+): string {
+  if (!notes) return ''
+  if (typeof notes === 'string') return htmlToMarkdown(notes)
+  return notes
+    .map((n) => `### ${n.version}\n${htmlToMarkdown(n.note)}`)
+    .join('\n\n')
+}
+
 export const readFilesWithDate = async (
   dir: PathLike,
   regex: RegExp,

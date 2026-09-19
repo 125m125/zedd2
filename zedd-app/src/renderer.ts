@@ -32,7 +32,14 @@ import {
   deriveTeamsAutoSwitchTask,
   pickBestTeamsCallOrMeetingTitle,
 } from './teamsAutoSwitch'
-import { fileExists, floor, formatHoursBT, formatHoursHHmm, mkdirIfNotExists } from './util'
+import {
+  fileExists,
+  floor,
+  formatHoursBT,
+  formatHoursHHmm,
+  mkdirIfNotExists,
+  releaseNotesToMarkdown,
+} from './util'
 import { ZeddSettings } from './ZeddSettings'
 import {
   getChromeDriverVersion,
@@ -219,50 +226,65 @@ function setupAutoUpdater(state: AppState, config: ZeddSettings) {
   // Tell the main process to initialize the updater with our settings
   ipcRenderer.send('updater-init', config.updateServer)
 
-  // Update is available — show notification with changelog preview, but deduplicate across checks
-  const onAvailable = (_event, info: { version: string; releaseNotes: string }) => {
+  // Update is available — show the rendered changelog in a dialog so the user can
+  // decide whether to download. Deduplicate across repeated checks.
+  // With `fullChangelog` enabled, releaseNotes is an array covering every version
+  // since the current one (so skipped versions are not missed).
+  const onAvailable = (
+    _event,
+    info: {
+      version: string
+      releaseNotes: string | { version: string; note: string }[]
+    },
+  ) => {
     const version = info.version
     if (lastNotifiedUpdateVersion === version) return // already notified this session
 
     lastNotifiedUpdateVersion = version
     console.log('[UPDATER] Update available:', version)
     state.updateAvailable = version
+    state.updateReleaseNotes = releaseNotesToMarkdown(info.releaseNotes)
+    state.updateDialogOpen = true
 
-    // Truncate release notes to ~200 chars for the notification body
-    const notes = info.releaseNotes && info.releaseNotes.length > 200
-      ? info.releaseNotes.substring(0, 200) + '…'
-      : info.releaseNotes || '(no release notes)'
-
+    // A quiet OS notification as well, in case the app window isn't focused.
     showNotification(
       `zedd update ${version} available`,
-      notes + '\nClick to install (requires restart), or ignore this notification.',
+      'Changelog shown in the app. Click to open it.',
       () => {
-        // User confirmed — tell main process to download
-        ipcRenderer.send('updater-confirm')
+        state.updateDialogOpen = true
       },
     )
   }
 
-  // Update downloaded successfully — prompt to restart and install
-  const onDownloaded = (_event, info: { releaseName: string; releaseNotes: string }) => {
-    console.log('[UPDATER] Update downloaded:', info.releaseName)
-    lastNotifiedUpdateVersion = null // clear dedup, this version is being installed
+  // Update applied in the background via Squirrel — it doesn't stop the running
+  // app. Tell the user to restart to pick up the new version.
+  const onInstalled = (_event, _info: { releaseName: string; releaseNotes: string }) => {
+    console.log('[UPDATER] Update installed in background — restart to apply')
+    lastNotifiedUpdateVersion = null // clear dedup, this version is installed
 
     showNotification(
-      `zedd ${info.releaseName} downloaded`,
-      'Click to restart and install now, or ignore to install later.',
+      `zedd ${state.updateAvailable ?? 'update'} installed`,
+      'Installed in the background. Click to restart and apply now, or restart whenever you like.',
       () => {
         ipcRenderer.send('updater-quit-and-install')
       },
     )
   }
 
+  // Update check / download failed — surface the real error (main process logs are invisible to users)
+  const onError = (_event, info: { message: string }) => {
+    console.error('[UPDATER] Error from main:', info.message)
+    state.addMessage(`Updater error: ${info.message}`, 'error', 20000)
+  }
+
   ipcRenderer.on('updater-update-available', onAvailable)
-  ipcRenderer.on('updater-downloaded', onDownloaded)
+  ipcRenderer.on('updater-downloaded', onInstalled)
+  ipcRenderer.on('updater-error', onError)
 
   return () => {
     ipcRenderer.removeListener('updater-update-available', onAvailable)
-    ipcRenderer.removeListener('updater-downloaded', onDownloaded)
+    ipcRenderer.removeListener('updater-downloaded', onInstalled)
+    ipcRenderer.removeListener('updater-error', onError)
   }
 }
 

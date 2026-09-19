@@ -13,11 +13,12 @@ module.exports = {
       name: '@electron-forge/maker-squirrel',
       config: {
         name: 'zedd',
-        remoteReleases: 'https://github.com/125m125/zedd2',
-        // Authenticate the sync-releases step with a token so it does not hit
-        // the unauthenticated GitHub API rate limit during `electron-forge make`.
-        // Resolves to undefined locally (no token) and is then skipped.
-        remoteToken: process.env.GITHUB_TOKEN,
+        // remoteReleases removed: it caused SyncReleases.exe to download ALL
+        // previous nupkgs from prior releases and re-upload them each release,
+        // bloating RELEASES. Without it, RELEASES only lists the current
+        // version's full+delta. That's all Squirrel's `--update` needs: it
+        // installs the latest full nupkg when the installed version doesn't
+        // match a delta base, so the old chain is never downloaded at runtime.
       },
     },
     {

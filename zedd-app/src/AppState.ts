@@ -367,6 +367,12 @@ export class AppState {
   @observable
   public updateAvailable: string | undefined
 
+  @observable
+  public updateReleaseNotes: string | undefined
+
+  @observable
+  public updateDialogOpen: boolean = false
+
   @serializable(
     custom(
       (x) => x,

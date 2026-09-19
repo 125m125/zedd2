@@ -6,8 +6,8 @@ import {
   Remove as ToHoverIcon,
   Stop as StopIcon,
 } from '@mui/icons-material'
-import { BrowserWindow, ipcRenderer } from 'electron'
-import { getCurrentWindow, app, autoUpdater } from '@electron/remote'
+import { BrowserWindow } from 'electron'
+import { getCurrentWindow, app } from '@electron/remote'
 import { observer, useLocalObservable } from 'mobx-react-lite'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
@@ -128,13 +128,8 @@ export const TitleBar = observer(({ state, menuItems, showContextMenu }: TitleBa
         {state.updateAvailable && (
           <MenuItem
             onClick={() => {
-              if (state.updateAvailable) {
-                console.log('[UPDATER] Installing update and quitting:', state.updateAvailable)
-                ipcRenderer.send('quit')
-              } else {
-                console.log('[UPDATER] Button clicked: checkForUpdates')
-                autoUpdater.checkForUpdates()
-              }
+              console.log('[UPDATER] Opening update dialog:', state.updateAvailable)
+              state.updateDialogOpen = true
               setAnchorEl(null)
             }}
           >

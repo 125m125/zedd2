@@ -27,12 +27,20 @@ jobs:
       - name: install app dependencies
         working-directory: ./zedd-app
         run: npm install
-        
+
       - name: build release
         working-directory: ./zedd-app
         run: npm run make
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: generate and upload latest.yml (Windows only)
+        if: runner.os == 'Windows'
+        working-directory: ./zedd-app
+        run: node scripts/generate-latest-yml.js --publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: create release
         uses: softprops/action-gh-release@v1
         with:
@@ -43,8 +51,9 @@ jobs:
             ./zedd-app/out/**/*.snap
             ./zedd-app/out/**/*.dmg
             ./zedd-app/out/**/*.zip
-            ./zedd-app/out/make/squirrel.windows/x64/*.exe
-            ./zedd-app/out/make/squirrel.windows/x64/*.nupkg
+            ./zedd-app/out/make/squirrel.windows/x64/*Setup.exe
+            ./zedd-app/out/make/squirrel.windows/x64/latest.yml
             ./zedd-app/out/make/squirrel.windows/x64/RELEASES
+            ./zedd-app/out/make/squirrel.windows/x64/*.nupkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

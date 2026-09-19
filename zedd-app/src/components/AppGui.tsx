@@ -144,6 +144,36 @@ export const AppGui = observer(
                 </DialogActions>
               </Dialog>
             )}
+            {state.updateDialogOpen && !state.hoverMode && (
+              <Dialog
+                open={true}
+                onClose={() => (state.updateDialogOpen = false)}
+                aria-labelledby='update-dialog-title'
+              >
+                <DialogTitle id='update-dialog-title'>
+                  zedd-app {state.updateAvailable} available
+                </DialogTitle>
+                <DialogContent>
+                  {state.updateReleaseNotes ? (
+                    <ReactMarkdown>{state.updateReleaseNotes}</ReactMarkdown>
+                  ) : (
+                    <p>(no release notes)</p>
+                  )}
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={() => (state.updateDialogOpen = false)}>Later</Button>
+                  <Button
+                    color='primary'
+                    onClick={() => {
+                      state.updateDialogOpen = false
+                      ipcRenderer.send('updater-confirm')
+                    }}
+                  >
+                    Download
+                  </Button>
+                </DialogActions>
+              </Dialog>
+            )}
             <TitleBar state={state} menuItems={menuItems} showContextMenu={showContextMenu} />
             {state.settingsDialogOpen && (
               <SettingsDialog

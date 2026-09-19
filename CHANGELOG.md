@@ -1,5 +1,6 @@
 ## [3.3.2] - 2026-09-01
 - Fix: Teams call detection no longer treats the "Communities and Storyline" channel page (and "Sharing control bar") as a meeting when the window title appends the user's name as an extra segment
+- Fix: Auto-updater applies updates in the background without quitting the app; new version takes effect on next launch. Please install 3.3.2 manually once (via installer), in-place updates work from 3.3.2 on
 
 ## [3.3.1] - 2026-08-26
 - Fix: Auto-fill of the platform task comment now skips tasks based on the assigned **account** name (containing ANA/UMS) instead of the local task name
