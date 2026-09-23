@@ -19,6 +19,30 @@ describe('teamsAutoSwitch', () => {
     )
   })
 
+  it('derives a meeting (not a call) from a meeting name containing the word "Call"', () => {
+    assert.deepStrictEqual(
+      deriveTeamsAutoSwitchTask('C&CA All Hands Call Q3 | Microsoft Teams'),
+      {
+        taskName: 'C&CA All Hands Call Q3',
+        taskActivityName: 'C&CA All Hands Call Q3',
+        platformTaskComment: 'C&CA All Hands Call Q3',
+        kind: 'meeting',
+      },
+    )
+  })
+
+  it('falls back to the default task name when no call partner remains', () => {
+    assert.deepStrictEqual(
+      deriveTeamsAutoSwitchTask('Call | Chat | Microsoft Teams'),
+      {
+        taskName: 'teams meeting',
+        taskActivityName: 'teams meeting',
+        platformTaskComment: '',
+        kind: 'fallback',
+      },
+    )
+  })
+
   it('derives a meeting task and comment from a Teams meeting title', () => {
     assert.deepStrictEqual(
       deriveTeamsAutoSwitchTask('Architecture Sync | Meeting | Microsoft Teams'),
@@ -39,6 +63,11 @@ describe('teamsAutoSwitch', () => {
     )
     assert.strictEqual(isTeamsCallOrMeetingTitle('Entwicklungs-Daily | Microsoft Teams'), true)
     assert.strictEqual(isTeamsCallOrMeetingTitle('Chat | Robert | Microsoft Teams'), false)
+    // Page label leading even when another segment contains a call marker
+    assert.strictEqual(
+      isTeamsCallOrMeetingTitle('Chat | C&CA All Hands Call Q3 | Microsoft Teams'),
+      false,
+    )
     assert.strictEqual(
       isTeamsCallOrMeetingTitle('AI Techtalk I - Grundlagen | Microsoft Teams'),
       true,

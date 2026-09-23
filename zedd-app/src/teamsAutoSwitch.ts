@@ -71,7 +71,11 @@ export const isTeamsCallOrMeetingTitle = (title: string): boolean => {
   const leadingSegment = normalizeWhitespace(
     normalizedTitle.split(/\s*(?:\||:|·|•)\s*/)[0],
   ).toLowerCase()
-const looksLikeMarkerlessMeeting =
+  // A page label (e.g. "Chat") as the leading segment means the window shows a
+  // Teams page, not a call/meeting — even if another segment contains a marker,
+  // e.g. "Chat | C&CA All Hands Call Q3 | Microsoft Teams".
+  const isPageView = NON_MEETING_TITLE_RE.test(leadingSegment)
+  const looksLikeMarkerlessMeeting =
     hasTeamsSuffix &&
     titleTokens.length > 0 &&
     titleTokens.some((token) => !isAllChannelKeywords(token)) &&
@@ -79,8 +83,10 @@ const looksLikeMarkerlessMeeting =
     !titleTokens.every((token) => isTeamsToken(token)) &&
     !EXCLUDED_TITLES.has(leadingSegment)
 
-  return (
-    CALL_MARKER_RE.test(normalizedTitle) ||
+  // Note: no whole-title CALL_MARKER_RE test here — a meeting named e.g.
+  // "C&CA All Hands Call Q3" must not count as a call. Only a standalone
+  // "Call"/"Anruf" segment marks a call window.
+  return !isPageView && (
     MEETING_MARKER_RE.test(normalizedTitle) ||
     titleTokens.some((token) => isCallToken(token) || isMeetingToken(token)) ||
     looksLikeMarkerlessMeeting
@@ -104,12 +110,21 @@ export const deriveTeamsAutoSwitchTask = (
   const sanitizedFallback = normalizeWhitespace(fallbackTaskName) || 'teams meeting'
   const titleTokens = splitTitle(title).filter((token) => !isTeamsToken(token))
   const rawTitle = stripTeamsSuffix(title)
-  const isCall = CALL_MARKER_RE.test(rawTitle) || titleTokens.some(isCallToken)
+  // Only a standalone "Call"/"Anruf" segment marks a call — a meeting named
+  // e.g. "C&CA All Hands Call Q3" must not become "call with ...".
+  const isCall = titleTokens.some(isCallToken)
 
   if (isCall) {
     const partner = titleTokens
       .map(cleanupCallPartner)
-      .find((token) => token && !isCallToken(token) && !isMeetingToken(token))
+      .find(
+        (token) =>
+          token &&
+          !isCallToken(token) &&
+          !isMeetingToken(token) &&
+          !NON_MEETING_TITLE_RE.test(token) &&
+          !isAllChannelKeywords(token),
+      )
     const activityName = partner ? `call with ${partner}` : sanitizedFallback
     return {
       taskName: activityName,

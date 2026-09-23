@@ -1,4 +1,7 @@
-## [3.3.2] - 2026-09-01
+## [3.3.3] - YYYY-MM-DD
+- Fix: The word "Call" inside a meeting name (e.g. "C&CA All Hands Call Q3") is no longer treated as a call — such meetings are auto-switched as meetings again, and the "Chat" page showing such a meeting is no longer detected as a call ("call with Chat")
+
+## [3.3.2] - 2026-09-23
 - Fix: Teams call detection no longer treats the "Communities and Storyline" channel page (and "Sharing control bar") as a meeting when the window title appends the user's name as an extra segment
 - Fix: Auto-updater applies updates in the background without quitting the app; new version takes effect on next launch. Please install 3.3.2 manually once (via installer), in-place updates work from 3.3.2 on
 
