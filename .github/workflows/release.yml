@@ -34,12 +34,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: generate and upload latest.yml (Windows only)
+      # Generate latest.yml locally; it is uploaded as a release asset by the
+      # "create release" step below. The script's --publish flag is only for
+      # manually repairing an already-existing release (e.g. v3.3.1), because
+      # during this workflow the release doesn't exist yet at this point (would 404).
+      - name: generate latest.yml (Windows only)
         if: runner.os == 'Windows'
         working-directory: ./zedd-app
-        run: node scripts/generate-latest-yml.js --publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/generate-latest-yml.js
 
       - name: create release
         uses: softprops/action-gh-release@v1
